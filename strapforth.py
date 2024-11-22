@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # A Forth interpreter in python. First step on an exercise on bootstrapping
 # Pablo Martin <pablo@odkq.com> See LICENSE.
+from sys import argv
 st = []     # The data stack
 push = lambda a: st.append(a)
 pop = lambda: st.pop()
@@ -8,8 +9,10 @@ pop = lambda: st.pop()
 compiling = False        # Whether we are in 'compile' mode
 compiling_symbol = None  # Current symbol being compiled
 seeing = False           # In see (introspection)
+no_new_line = False
 
-def execline(line):
+
+def execline(line, no_new_line=False):
     ''' Execute a line by separating it in tokens separated
         by spaces '''
     in_comment = False
@@ -72,6 +75,9 @@ def execforth(tokens):
         if token not in sym:
             print(f'symbol \'{token}\' not defined')
             break
+        if type(sym[token]) == list:
+            execforth(sym[token])
+            continue
         try:
             sym[token]()
         except IndexError:
@@ -99,28 +105,50 @@ def roll():
     idx = pick()
     del st[-(idx + 2)]
 
+def div():
+    divisor = pop()
+    dividend = pop()
+    push(dividend // divisor)
+
 def see(name):      # Show contents of a compiled symbol
     if type(sym[name]) == list:
-        print(f": {name} \n  {' '.join([str(e) for e in sym[name]])} ;")
+        if no_new_line:
+            # Maintain byte-by-byte output similarity with gforth for testing
+            print('')
+        print(f": {name}  \n  {' '.join([str(e) for e in sym[name]])} ;",
+              end='' if no_new_line else '\n')
     else:
-        print(f"code {name}")
+        # Here the coherent thing would be to show the code for the python
+        # function
+        print(f"code {name}",
+              end='' if no_new_line else '\n')
 
-sym = {'.': lambda: print(pop()),  # print top element
+sym = {'.': lambda: print(pop(), end=' ' if no_new_line else '\n'),
        '+': lambda: push(pop() + pop()),
        '-': lambda: push(-(pop() - pop())),
        '*': lambda: push(pop() * pop()),
-       '/': lambda: push(1 / (pop() / pop())),
-       'dup': lambda: push(st[-1]), # Duplicate top element
+       'dup': lambda: push(st[-1]),  # Duplicate top element
        'swap': swap, 'rot': rot, 'nip': nip, 'tuck': tuck,
-       'pick': pick, 'roll': roll, 'see': see,
+       'pick': pick, 'roll': roll, 'see': see, '/': div,
        'drop': lambda: pop(),
        'over': lambda: push(st[-2]),
-       '.s': lambda: print(f"<{len(st)}> {' '.join([str(e) for e in st])}")
+       '.s': lambda: print(f"<{len(st)}> {' '.join([str(e) for e in st])}",
+                           end=' ' if no_new_line else '\n')
        }
 
-while True:
-    try:
-        line = input()
-    except EOFError:
-        break
-    execline(line)
+
+if len(argv) == 2:
+    # Read from file
+    filename = argv[1]
+    f = open(filename, 'r')
+    for line in f.readlines():
+        no_new_line = True
+        execline(line[:-1])
+    f.close()
+else:
+    while True:
+        try:
+            line = input()
+        except EOFError:
+            break
+        execline(line)

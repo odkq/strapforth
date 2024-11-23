@@ -8,6 +8,4 @@
 \ Define new words
 : square ( n -- n ) dup * ; : cube square dup * ;
 \ Introspection
-see square
-5 cube .
-see cube
+see square 5 cube . see cube

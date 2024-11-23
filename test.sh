@@ -1,7 +1,7 @@
 #!/bin/bash
 gforth test.fth -e bye > output-gforth.txt
 ./strapforth.py test.fth > output-strapforth.txt
-diff -u output-gforth.txt output-strapforth.txt
+diff -u output-strapforth.txt output-gforth.txt
 result=$?
 rm output-gforth.txt output-strapforth.txt
 

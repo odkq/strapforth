@@ -27,6 +27,9 @@ def execforth(line_or_tokens):
 
 
 def exectoken(token):
+    ''' Main interpreter function. Operate over one token
+        Returns False if the rest of the line/tokens are to be executed,
+        and True if not '''
     # The see word operates over the next argument instead of
     # the previous (stack). Thats why it needs to be handled here
     global seeing

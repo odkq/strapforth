@@ -10,7 +10,7 @@ compiling = False        # Whether we are in 'compile' mode
 compiling_symbol = None  # Current symbol being compiled
 seeing = False           # In see (introspection)
 no_new_line = False      # Output new line after line executed or not
-
+dead_branch = False
 
 def execforth(line_or_tokens):
     ''' Execute a string of tokens separated by spaces,
@@ -30,16 +30,6 @@ def exectoken(token):
     ''' Main interpreter function. Operate over one token
         Returns False if the rest of the line/tokens are to be executed,
         and True if not '''
-    # The see word operates over the next argument instead of
-    # the previous (stack). Thats why it needs to be handled here
-    global seeing
-    if seeing:
-        see(token)
-        seeing = False
-        return False
-    elif token == 'see':
-        seeing = True
-        return False
 
     # Handle ( comments ) between parenthesis
     global in_comment
@@ -51,6 +41,22 @@ def exectoken(token):
         if token == '(':
             in_comment = True
             return False
+
+    if dead_branch:     # We are on the non-executing part of an if
+        if token not in ['else', 'then']:
+            return False
+
+    # The see word operates over the next argument instead of
+    # the previous (stack). Thats why it needs to be handled here
+    global seeing
+
+    if seeing:
+        see(token)
+        seeing = False
+        return False
+    elif token == 'see':
+        seeing = True
+        return False
 
     # Handle compiling tokens, : <symbol> <tokens> ;
     global compiling
@@ -148,6 +154,23 @@ def div():
     dividend = pop()
     push(dividend // divisor)
 
+def ifword():
+    global dead_branch
+    condition = pop()
+    if condition == 0:
+        dead_branch = True
+
+def elseword():
+    global dead_branch
+    if dead_branch:
+        dead_branch = False
+    else:
+        dead_branch = True
+
+def thenword():
+    global dead_branch
+    dead_branch = False
+
 
 def see(name):
     ''' Show contents of a compiled symbol '''
@@ -171,11 +194,14 @@ sym = {'.': lambda: print(pop(), end=' ' if no_new_line else '\n'),
        '-': lambda: push(-(pop() - pop())),
        '*': lambda: push(pop() * pop()),
        '=': lambda: push(-1 if pop() == pop() else 0),
+       '<>': lambda: push(-1 if pop() != pop() else 0),
+       '>': lambda: push(-1 if pop() < pop() else 0),
        'dup': lambda: push(st[-1]),  # Duplicate top element
        'swap': swap, 'rot': rot, 'nip': nip, 'tuck': tuck,
        'pick': pick, 'roll': roll, 'see': see, '/': div,
        'drop': lambda: pop(),
        'over': lambda: push(st[-2]),
+       'if': ifword, 'else': elseword, 'then': thenword,
        '.s': lambda: print(f"<{len(st)}> {' '.join([str(e) for e in st])}",
                            end=' ' if no_new_line else '\n')
        }

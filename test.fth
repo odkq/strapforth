@@ -9,5 +9,11 @@
 : square ( n -- n ) dup * ; : cube square dup * ;
 \ Introspection
 see square 5 cube . see cube
-10 10 = .
-12 53 = .
+( see cube )
+\ As in 0, 0 is true and != 0 is false
+10 10 = . 12 53 = .
+12 10 > . 12 12 > .
+10 10 <> . 12 53 <> .
+: ?>50 ( n -- n ) dup 50 > if 1111 else 2222 then ;
+100 ?>50 .
+40 ?>50 .

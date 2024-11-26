@@ -14,6 +14,8 @@ see square 5 cube . see cube
 10 10 = . 12 53 = .
 12 10 > . 12 12 > .
 10 10 <> . 12 53 <> .
+\ test if..else..then
 : ?>50 ( n -- n ) dup 50 > if 1111 else 2222 then ;
-100 ?>50 .
-40 ?>50 .
+100 ?>50 . 40 ?>50 .
+\ Test trailing whitespaces
+10  20  30

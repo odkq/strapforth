@@ -31,6 +31,9 @@ def exectoken(token):
         Returns False if the rest of the line/tokens are to be executed,
         and True if not '''
 
+    if token == '':
+        return False
+
     # Handle ( comments ) between parenthesis
     global in_comment
     if in_comment:

@@ -9,3 +9,5 @@
 : square ( n -- n ) dup * ; : cube square dup * ;
 \ Introspection
 see square 5 cube . see cube
+10 10 = .
+12 53 = .

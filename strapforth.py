@@ -170,6 +170,7 @@ sym = {'.': lambda: print(pop(), end=' ' if no_new_line else '\n'),
        '+': lambda: push(pop() + pop()),
        '-': lambda: push(-(pop() - pop())),
        '*': lambda: push(pop() * pop()),
+       '=': lambda: push(-1 if pop() == pop() else 0),
        'dup': lambda: push(st[-1]),  # Duplicate top element
        'swap': swap, 'rot': rot, 'nip': nip, 'tuck': tuck,
        'pick': pick, 'roll': roll, 'see': see, '/': div,

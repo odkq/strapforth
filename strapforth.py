@@ -11,6 +11,8 @@ compiling_symbol = None  # Current symbol being compiled
 seeing = False           # In see (introspection)
 no_new_line = False      # Output new line after line executed or not
 dead_branch = False
+base = 10
+
 
 def execforth(line_or_tokens):
     ''' Execute a string of tokens separated by spaces,
@@ -82,9 +84,12 @@ def exectoken(token):
             return False
 
     # A number, push it as integer
-    if token.isnumeric():
-        push(int(token))
+    try:
+        i = int(token, base)
+        push(i)
         return False
+    except ValueError:
+        pass
 
     # line comment, discard all the rest of tokens in the line
     if token == '\\':
@@ -175,6 +180,11 @@ def thenword():
     dead_branch = False
 
 
+def hex():
+    global base
+    base = 16
+
+
 def see(name):
     ''' Show contents of a compiled symbol '''
     if isinstance(sym[name], list):
@@ -190,9 +200,24 @@ def see(name):
               end='' if no_new_line else '\n')
 
 
+def forthprint():
+    a = pop()
+    if isinstance(a, int):
+        if base == 16:
+            try:
+                s = '%2.2x' % a
+            except TypeError:
+                print(f"a [{a}] type {type(a)}")
+        else:
+            s = str(a)
+    else:
+        s = str(a)
+    print(s, end= ' ' if no_new_line else '\n')
+
+
 # Table of symbols. Pointing to the above functions or defined directly
 # inline
-sym = {'.': lambda: print(pop(), end=' ' if no_new_line else '\n'),
+sym = {'.': forthprint,
        '+': lambda: push(pop() + pop()),
        '-': lambda: push(-(pop() - pop())),
        '*': lambda: push(pop() * pop()),
@@ -202,7 +227,7 @@ sym = {'.': lambda: print(pop(), end=' ' if no_new_line else '\n'),
        'dup': lambda: push(st[-1]),  # Duplicate top element
        'swap': swap, 'rot': rot, 'nip': nip, 'tuck': tuck,
        'pick': pick, 'roll': roll, 'see': see, '/': div,
-       'drop': lambda: pop(),
+       'drop': lambda: pop(), 'hex': hex,
        'over': lambda: push(st[-2]),
        'if': ifword, 'else': elseword, 'then': thenword,
        '.s': lambda: print(f"<{len(st)}> {' '.join([str(e) for e in st])}",

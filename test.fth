@@ -21,3 +21,5 @@ see square 5 cube . see cube
 10  20  30
 hex
 10 10 + .
+include test2.fth
+test2 .

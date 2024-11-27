@@ -8,11 +8,13 @@ st = []         # The data stack
 
 compiling = False        # Whether we are in 'compile' mode
 compiling_symbol = None  # Current symbol being compiled
-seeing = False           # In see (introspection)
 no_new_line = False      # Output new line after line executed or not
 dead_branch = False
 base = 10
-
+infix = None        # Certain words get the next token
+                    # like 'see word' or 'include <path>'
+                    # This var stores the word to be executed
+                    # when the second one is parsed
 
 def execforth(line_or_tokens):
     ''' Execute a string of tokens separated by spaces,
@@ -20,7 +22,7 @@ def execforth(line_or_tokens):
     global in_comment
     in_comment = False
     if isinstance(line_or_tokens, str):
-        tokens = line.split(' ')
+        tokens = line_or_tokens.split(' ')
     else:
         tokens = line_or_tokens
     for token in tokens:
@@ -51,17 +53,20 @@ def exectoken(token):
         if token not in ['else', 'then']:
             return False
 
-    # The see word operates over the next argument instead of
-    # the previous (stack). Thats why it needs to be handled here
-    global seeing
+    # Look for infix meta words that get the next token as argument
+    # call them
+    global infix
+    if infix is None:
+        if token in infix_words.keys():
+            infix = infix_words[token]
+            return False
+    else:
+        fun = infix
+        infix = None  # Reset before calling or it will get the first
+                      # word in the included file as infix suffix
+        fun(token)
+        return False
 
-    if seeing:
-        see(token)
-        seeing = False
-        return False
-    elif token == 'see':
-        seeing = True
-        return False
 
     # Handle compiling tokens, : <symbol> <tokens> ;
     global compiling
@@ -200,6 +205,10 @@ def see(name):
               end='' if no_new_line else '\n')
 
 
+def include(path):
+    execfile(path)
+
+
 def forthprint():
     a = pop()
     if isinstance(a, int):
@@ -215,6 +224,8 @@ def forthprint():
     print(s, end= ' ' if no_new_line else '\n')
 
 
+infix_words = {'see': see,
+               'include': include}
 # Table of symbols. Pointing to the above functions or defined directly
 # inline
 sym = {'.': forthprint,
@@ -235,10 +246,8 @@ sym = {'.': forthprint,
        }
 
 
-# Entrypoint
-if len(argv) == 2:
-    # If we receive an argument, it is a filename to execute
-    filename = argv[1]
+def execfile(filename):
+    global no_new_line
     f = open(filename, 'r')
     for line in f.readlines():
         # Do not output a '\n' after each line executed 
@@ -248,6 +257,11 @@ if len(argv) == 2:
             line = line[:-1]
         execforth(line)
     f.close()
+
+
+# Entrypoint
+if len(argv) == 2:
+    execfile(argv[1]) # If we receive an argument, it is a filename to execute
 else:
     # Interactive usage
     while True:

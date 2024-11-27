@@ -19,3 +19,5 @@ see square 5 cube . see cube
 100 ?>50 . 40 ?>50 .
 \ Test trailing whitespaces
 10  20  30
+hex
+10 10 + .

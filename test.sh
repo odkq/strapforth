@@ -9,6 +9,6 @@ if [ $result -eq 0 ]; then
   echo "Output from gforth and strapforth is the same. Test PASSED"
   exit 0
 else
-  echo "Output from gforth and strapforth is the same. Test FAILED"
+  echo "Output from gforth and strapforth is not the same. Test FAILED"
   exit 1
 fi
